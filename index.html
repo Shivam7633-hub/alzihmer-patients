@@ -3,442 +3,1149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="CareSync - Medicine reminder app for Alzheimer's patients">
-  <title>CareSync Reminder</title>
+  <meta name="description" content="CareSync - Advanced Medicine Reminder App for Alzheimer's Patients">
+  <title>CareSync - Medicine Reminder</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#3498db">
+  <meta name="theme-color" content="#667eea">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <style>
-    /* High-contrast, highly readable UI */
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-      background: #f4f4f9; 
-      color: #111; 
-      text-align: center; 
-      padding: 15px; 
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-    }
-    
-    .header h1 { font-size: 2.2rem; color: #2c3e50; margin: 20px 0 5px 0; }
-    .clock { font-size: 5rem; font-weight: bold; margin: 10px 0 30px 0; color: #e74c3c; font-variant-numeric: tabular-nums; }
-    
-    .schedule-list { text-align: left; background: #fff; padding: 20px; border-radius: 12px; margin: 0 auto; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .schedule-list h3 { margin-top: 0; color: #7f8c8d; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-    .schedule-item { font-size: 1.2rem; padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
-    .taken-text { color: #27ae60; font-weight: bold; }
-    .pending-text { color: #e67e22; font-weight: bold; }
-
-    /* The Active Alert Card */
-    .med-card { 
-      background: white; 
-      padding: 35px 20px; 
-      border-radius: 16px; 
-      margin: 20px auto; 
-      max-width: 400px; 
-      box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4); 
-      border: 4px solid #e74c3c; 
-      animation: pulseAlert 2s infinite;
-    }
-    
-    .med-name { font-size: 2.5rem; font-weight: 900; color: #c0392b; line-height: 1.2; }
-    .med-time { font-size: 1.5rem; color: #555; margin: 15px 0; }
-    
-    .btn { 
-      background: #27ae60; color: white; border: none; padding: 25px; font-size: 2rem; 
-      border-radius: 12px; cursor: pointer; width: 100%; margin-top: 20px; font-weight: bold; 
-      box-shadow: 0 6px 0 #1e8449; transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .btn:active { transform: translateY(6px); box-shadow: 0 0 0 #1e8449; }
-    .btn:hover { opacity: 0.9; }
-    
-    .btn-test { background: #34495e; font-size: 1.1rem; padding: 15px; margin: 20px auto; box-shadow: 0 4px 0 #2c3e50; max-width: 300px;}
-    .btn-reset { background: #95a5a6; font-size: 1rem; padding: 10px; margin-top: 20px; width: 100%; max-width: 300px; box-shadow: 0 3px 0 #7f8c8d; }
-    .hidden { display: none !important; }
-    .error-msg { background: #e74c3c; color: white; padding: 15px; border-radius: 8px; margin: 10px auto; max-width: 400px; }
-    .success-msg { background: #27ae60; color: white; padding: 15px; border-radius: 8px; margin: 10px auto; max-width: 400px; }
-
-    /* Footer Credits */
-    .footer { margin-top: auto; padding: 20px 0; font-size: 0.9rem; color: #95a5a6; font-weight: bold; }
-
-    @keyframes pulseAlert {
-      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-      70% { transform: scale(1.02); box-shadow: 0 0 0 20px rgba(231, 76, 60, 0); }
-      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+      color: #333;
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    .pop-in { animation: popIn 0.5s; }
+    /* Header */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
 
-    /* Accessibility */
-    @media (prefers-reduced-motion: reduce) {
-      * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    .header h1 {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .logo {
+      font-size: 3rem;
+      display: inline-block;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Digital Clock */
+    .clock-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .digital-clock {
+      font-size: 4rem;
+      font-weight: bold;
+      color: #667eea;
+      font-variant-numeric: tabular-nums;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 5px;
+      margin: 20px 0;
+      text-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .date-display {
+      font-size: 1.2rem;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    /* Main Content Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 968px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Add Medicine Section */
+    .add-medicine-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      color: #667eea;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: #999;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-danger {
+      background: #ff6b6b;
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn-danger:hover {
+      background: #ee5a52;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #27ae60;
+      transform: translateY(-2px);
+    }
+
+    /* Schedule List Section */
+    .schedule-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .medicine-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 20px;
+      border-radius: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 5px solid #667eea;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .medicine-card:hover {
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .medicine-card.taken {
+      border-left-color: #2ecc71;
+      opacity: 0.7;
+    }
+
+    .medicine-info h3 {
+      font-size: 1.3rem;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .medicine-time {
+      font-size: 1rem;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .medicine-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .medicine-actions button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-size: 0.9rem;
+    }
+
+    .btn-mark {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .btn-mark:hover {
+      background: #27ae60;
+    }
+
+    .btn-delete {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background: #ee5a52;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-taken {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    /* Alert Messages */
+    .alert {
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #2ecc71;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #ff6b6b;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #667eea;
+    }
+
+    .alert.hidden {
+      display: none;
+    }
+
+    /* Active Alert (When medicine time comes) */
+    .active-alert-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .active-alert-card {
+      background: white;
+      padding: 50px;
+      border-radius: 30px;
+      text-align: center;
+      max-width: 500px;
+      animation: slideDown 0.5s ease-out;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .active-alert-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: bounce 1s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .active-alert-title {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .active-alert-medicine {
+      font-size: 1.8rem;
+      color: #ff6b6b;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+
+    .active-alert-time {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+    }
+
+    /* Settings Button */
+    .settings-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+      z-index: 100;
+    }
+
+    .settings-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      animation: slideUp 0.3s;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #999;
+      background: none;
+      border: none;
+    }
+
+    .close-modal:hover {
+      color: #333;
+    }
+
+    /* Notification permission banner */
+    .notification-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .notification-banner.hidden {
+      display: none;
+    }
+
+    .notification-banner button {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .digital-clock {
+        font-size: 2.5rem;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .add-medicine-section,
+      .schedule-section,
+      .clock-section {
+        padding: 20px;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .settings-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+
+      .active-alert-card {
+        padding: 30px;
+      }
+
+      .active-alert-title {
+        font-size: 1.8rem;
+      }
+
+      .active-alert-medicine {
+        font-size: 1.4rem;
+      }
     }
   </style>
 </head>
 <body>
 
+<div class="container">
+  <!-- Header -->
   <div class="header">
-    <h1 id="header-title">Current Time</h1>
-    <div class="clock" id="clock" role="status" aria-live="polite" aria-label="Current time">00:00</div>
+    <h1>
+      <span class="logo">💊</span>
+      CareSync
+    </h1>
+    <p>Your Personal Medicine Reminder Assistant</p>
   </div>
 
-  <button id="notify-btn" class="btn btn-test" onclick="requestPermissions()" aria-label="Enable device notifications for medicine reminders">Enable Device Alerts</button>
+  <!-- Notification Banner -->
+  <div id="notificationBanner" class="notification-banner">
+    <span>📬 Enable notifications to receive medicine reminders</span>
+    <button onclick="requestNotificationPermission()">Enable Now</button>
+  </div>
 
-  <div id="error-container"></div>
+  <!-- Clock Section -->
+  <div class="clock-section">
+    <p style="font-size: 1rem; color: #666;">Current Time</p>
+    <div class="digital-clock" id="clock" role="status" aria-live="polite">00:00</div>
+    <div class="date-display" id="date"></div>
+  </div>
 
-  <div id="medicine-container" role="main" aria-label="Medicine schedule and alerts">
-    <!-- Active alerts replace this content -->
-    <div class="schedule-list" id="schedule-list" role="region" aria-label="Today's medicine schedule">
-      <h3>Today's Schedule</h3>
-      <!-- Populated by JS -->
+  <!-- Main Content Grid -->
+  <div class="main-grid">
+    <!-- Add Medicine Section -->
+    <div class="add-medicine-section">
+      <h2 class="section-title">➕ Add Your Medicine</h2>
+      
+      <div id="alertContainer"></div>
+
+      <form onsubmit="addMedicine(event)">
+        <div class="form-group">
+          <label for="medicineName">Medicine Name *</label>
+          <input 
+            type="text" 
+            id="medicineName" 
+            placeholder="e.g., Aspirin, Blood Pressure Med" 
+            required
+            maxlength="50"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="medicineTime">Time to Take *</label>
+          <input 
+            type="time" 
+            id="medicineTime" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="medicineDosage">Dosage (Optional)</label>
+          <input 
+            type="text" 
+            id="medicineDosage" 
+            placeholder="e.g., 1 tablet, 2 times daily"
+            maxlength="50"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="medicineNotes">Notes (Optional)</label>
+          <input 
+            type="text" 
+            id="medicineNotes" 
+            placeholder="e.g., Take with water, after meals"
+            maxlength="100"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <span>➕</span> Add Medicine
+        </button>
+      </form>
+    </div>
+
+    <!-- Schedule Section -->
+    <div class="schedule-section">
+      <h2 class="section-title">📋 Today's Schedule</h2>
+      <div class="schedule-list" id="scheduleList">
+        <div class="empty-state">
+          <div class="empty-state-icon">📅</div>
+          <p>No medicines added yet. Add one to get started!</p>
+        </div>
+      </div>
+      <button onclick="resetSchedule()" class="btn btn-secondary" style="margin-top: 20px;">
+        🔄 Reset Schedule
+      </button>
     </div>
   </div>
+</div>
 
-  <div class="footer">
-    Designed & Developed for Alzheimer's Patient Care
+<!-- Active Alert Overlay -->
+<div id="activeAlertOverlay" class="active-alert-overlay" style="display: none;">
+  <div class="active-alert-card">
+    <div class="active-alert-icon">⏰</div>
+    <div class="active-alert-title">TIME TO TAKE YOUR MEDICINE!</div>
+    <div class="active-alert-medicine" id="alertMedicineName"></div>
+    <div class="active-alert-time" id="alertMedicineTime"></div>
+    <button class="btn btn-success" onclick="markMedicineTaken()" style="margin-bottom: 10px;">
+      ✅ I TOOK IT
+    </button>
+    <button class="btn btn-secondary" onclick="dismissAlert()">
+      ⏭️ Remind Me Later
+    </button>
   </div>
+</div>
 
-  <script>
-    'use strict';
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" onclick="closeSettings()">✕</button>
+    <div class="modal-header">⚙️ Settings</div>
+    
+    <div class="form-group">
+      <label for="webhookUrl">Caregiver Webhook URL (Optional)</label>
+      <input 
+        type="text" 
+        id="webhookUrl" 
+        placeholder="https://hooks.slack.com/..."
+      >
+      <small style="color: #999; display: block; margin-top: 5px;">
+        For Slack, Discord, or Make.com integrations
+      </small>
+    </div>
 
-    // --- CONFIGURATION ---
-    const CONFIG = {
-      WEBHOOK_URL: localStorage.getItem('webhook_url') || null,
-      CHECK_INTERVAL: 1000, // Check time every second
-      ALERT_SOUND_INTERVAL: 5000, // Beep every 5 seconds
-      CAREGIVER_TIMEOUT: 30 * 60 * 1000 // 30 minutes
+    <button class="btn btn-primary" onclick="saveSettings()">
+      💾 Save Settings
+    </button>
+
+    <button class="btn btn-secondary" onclick="exportData()" style="margin-top: 10px;">
+      📥 Export Data
+    </button>
+
+    <button class="btn btn-danger" onclick="clearAllData()" style="margin-top: 10px;">
+      🗑️ Clear All Data
+    </button>
+  </div>
+</div>
+
+<!-- Settings Button -->
+<button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
+
+<script>
+  'use strict';
+
+  // Configuration
+  const CONFIG = {
+    ALERT_SOUND_INTERVAL: 5000,
+    CAREGIVER_TIMEOUT: 30 * 60 * 1000,
+    CHECK_INTERVAL: 1000
+  };
+
+  // State
+  let medicines = [];
+  let alertSoundInterval = null;
+  let currentAlert = null;
+
+  // Initialize app
+  function init() {
+    loadMedicines();
+    renderSchedule();
+    updateClock();
+    setInterval(updateClock, CONFIG.CHECK_INTERVAL);
+    checkMedicineTime();
+    setInterval(checkMedicineTime, CONFIG.CHECK_INTERVAL);
+    
+    // Check notification permission
+    if ("Notification" in window && Notification.permission === "granted") {
+      document.getElementById('notificationBanner').classList.add('hidden');
+    }
+
+    // Set current time in input
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('medicineTime').value = `${hours}:${minutes}`;
+
+    console.log('CareSync initialized successfully');
+  }
+
+  // Load medicines from localStorage
+  function loadMedicines() {
+    try {
+      medicines = JSON.parse(localStorage.getItem('caresync_medicines')) || [];
+    } catch (e) {
+      console.error('Failed to load medicines:', e);
+      medicines = [];
+    }
+  }
+
+  // Save medicines to localStorage
+  function saveMedicines() {
+    try {
+      localStorage.setItem('caresync_medicines', JSON.stringify(medicines));
+      renderSchedule();
+    } catch (e) {
+      showAlert('Failed to save medicines: ' + e.message, 'error');
+    }
+  }
+
+  // Add medicine
+  function addMedicine(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('medicineName').value.trim();
+    const time = document.getElementById('medicineTime').value;
+    const dosage = document.getElementById('medicineDosage').value.trim();
+    const notes = document.getElementById('medicineNotes').value.trim();
+
+    if (!name || !time) {
+      showAlert('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const medicine = {
+      id: Date.now(),
+      name,
+      time,
+      dosage,
+      notes,
+      taken: false,
+      alerted: false,
+      addedDate: new Date().toISOString()
     };
 
-    // --- UTILITY FUNCTIONS ---
-    function showError(message) {
-      const container = document.getElementById('error-container');
-      if (!container) return;
-      
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'error-msg';
-      errorDiv.textContent = message;
-      errorDiv.setAttribute('role', 'alert');
-      container.appendChild(errorDiv);
-      
-      setTimeout(() => errorDiv.remove(), 5000);
-      console.error('ERROR:', message);
+    medicines.push(medicine);
+    saveMedicines();
+
+    // Clear form
+    event.target.reset();
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('medicineTime').value = `${hours}:${minutes}`;
+
+    showAlert(`Medicine "${name}" added successfully! ✨`, 'success');
+  }
+
+  // Delete medicine
+  function deleteMedicine(id) {
+    if (confirm('Are you sure you want to delete this medicine?')) {
+      medicines = medicines.filter(m => m.id !== id);
+      saveMedicines();
+      showAlert('Medicine deleted', 'success');
+    }
+  }
+
+  // Mark medicine as taken
+  function markMedicineTaken(id = null) {
+    if (id) {
+      const medicine = medicines.find(m => m.id === id);
+      if (medicine) {
+        medicine.taken = true;
+        saveMedicines();
+        showAlert(`Great! You took ${medicine.name} ✅`, 'success');
+      }
+    } else if (currentAlert) {
+      const medicine = medicines.find(m => m.id === currentAlert.id);
+      if (medicine) {
+        medicine.taken = true;
+        saveMedicines();
+        dismissAlert();
+        showAlert(`Great! You took ${medicine.name} ✅`, 'success');
+      }
+    }
+  }
+
+  // Render schedule
+  function renderSchedule() {
+    const scheduleList = document.getElementById('scheduleList');
+
+    if (medicines.length === 0) {
+      scheduleList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📅</div>
+          <p>No medicines added yet. Add one to get started!</p>
+        </div>
+      `;
+      return;
     }
 
-    function showSuccess(message) {
-      const container = document.getElementById('error-container');
-      if (!container) return;
-      
-      const successDiv = document.createElement('div');
-      successDiv.className = 'success-msg';
-      successDiv.textContent = message;
-      container.appendChild(successDiv);
-      
-      setTimeout(() => successDiv.remove(), 3000);
+    // Sort medicines by time
+    const sorted = [...medicines].sort((a, b) => a.time.localeCompare(b.time));
+
+    scheduleList.innerHTML = sorted.map(med => `
+      <div class="medicine-card ${med.taken ? 'taken' : ''}">
+        <div class="medicine-info">
+          <h3>${med.name}</h3>
+          <div class="medicine-time">
+            <span>⏰</span>
+            <span>${med.time}</span>
+            ${med.dosage ? `<span>•</span><span>${med.dosage}</span>` : ''}
+          </div>
+          ${med.notes ? `<div style="font-size: 0.9rem; color: #666; margin-top: 5px;">📝 ${med.notes}</div>` : ''}
+          <div style="margin-top: 10px;">
+            <span class="status-badge ${med.taken ? 'status-taken' : 'status-pending'}">
+              ${med.taken ? '✅ Taken' : '⏳ Pending'}
+            </span>
+          </div>
+        </div>
+        <div class="medicine-actions">
+          ${!med.taken ? `
+            <button class="btn-mark" onclick="markMedicineTaken(${med.id})" title="Mark as taken">
+              ✅
+            </button>
+          ` : ''}
+          <button class="btn-delete" onclick="deleteMedicine(${med.id})" title="Delete">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Update clock
+  function updateClock() {
+    const now = new Date();
+    
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = now.toLocaleDateString('en-US', options);
+    document.getElementById('date').textContent = dateStr;
+  }
+
+  // Check medicine time
+  function checkMedicineTime() {
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    medicines.forEach(med => {
+      if (med.time === currentTime && !med.taken && !med.alerted) {
+        med.alerted = true;
+        saveMedicines();
+        showMedicineAlert(med);
+        triggerCaregiverAlert(med);
+      }
+    });
+  }
+
+  // Show medicine alert
+  function showMedicineAlert(medicine) {
+    currentAlert = medicine;
+
+    document.getElementById('alertMedicineName').textContent = medicine.name;
+    document.getElementById('alertMedicineTime').textContent = `Time: ${medicine.time}`;
+
+    if (medicine.dosage) {
+      document.getElementById('alertMedicineTime').textContent += ` • ${medicine.dosage}`;
     }
 
-    function formatTime(date) {
-      if (!(date instanceof Date)) return null;
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
+    document.getElementById('activeAlertOverlay').style.display = 'flex';
 
-    // --- 1. SERVICE WORKER & NOTIFICATIONS ---
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .catch(err => console.warn('Service Worker registration failed:', err));
+    // Play sound
+    playBeep();
+    alertSoundInterval = setInterval(playBeep, CONFIG.ALERT_SOUND_INTERVAL);
+
+    // Show notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("💊 Time to take your medicine!", {
+        body: `It's time to take ${medicine.name}`,
+        icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23667eea'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='central'>💊</text></svg>",
+        requireInteraction: true,
+        tag: `medicine-${medicine.id}`
       });
     }
+  }
 
-    // Hide notify button if already granted
-    if ("Notification" in window && Notification.permission === "granted") {
-      document.getElementById('notify-btn').classList.add('hidden');
+  // Dismiss alert
+  function dismissAlert() {
+    document.getElementById('activeAlertOverlay').style.display = 'none';
+    if (alertSoundInterval) {
+      clearInterval(alertSoundInterval);
     }
+    currentAlert = null;
+  }
 
-    function requestPermissions() {
-      if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            document.getElementById('notify-btn').classList.add('hidden');
-            showSuccess("Alerts enabled successfully!");
-          } else {
-            showError("Notifications permission denied. Reminders may not work.");
-          }
-        }).catch(err => {
-          showError("Failed to request notification permission: " + err.message);
-        });
-      } else {
-        showError("Your device does not support notifications.");
-      }
-    }
-
-    // --- 2. AUDIO ALARM SYNTHESIZER ---
-    function playBeep() {
-      try {
-        if (!window.AudioContext && !window.webkitAudioContext) {
-          console.warn("AudioContext not supported");
-          return;
-        }
-
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        
-        osc.type = 'square'; // Harsh, noticeable sound
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        
-        // Pulse the volume
-        gainNode.gain.setValueAtTime(1, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-      } catch (e) {
-        console.warn("Audio playback unavailable:", e.message);
-      }
-    }
-
-    // --- 3. DATA & LOCAL STORAGE ---
-    const defaultSchedule = [
-      { id: 1, name: "Heart Pill (Lisinopril)", time: "09:00", taken: false, alerted: false },
-      { id: 2, name: "Memory Med (Donepezil)", time: "20:00", taken: false, alerted: false }
-    ];
-
-    let schedule = [];
-    let alertSoundInterval = null;
-
-    function loadSchedule() {
-      try {
-        schedule = JSON.parse(localStorage.getItem('caresync_data')) || defaultSchedule;
-        validateSchedule();
-      } catch (e) {
-        console.error('Failed to load schedule:', e);
-        schedule = defaultSchedule;
-      }
-    }
-
-    function validateSchedule() {
-      // Ensure all required fields exist
-      schedule = schedule.map(med => ({
-        id: med.id || Date.now(),
-        name: med.name || 'Unknown Medicine',
-        time: med.time || '00:00',
-        taken: !!med.taken,
-        alerted: !!med.alerted
-      }));
-    }
-
-    function saveSchedule() {
-      try {
-        localStorage.setItem('caresync_data', JSON.stringify(schedule));
-        renderScheduleList();
-      } catch (e) {
-        showError('Failed to save schedule: ' + e.message);
-      }
-    }
-
-    function renderScheduleList() {
-      const listDiv = document.getElementById('schedule-list');
-      if (!listDiv) return;
-      
-      try {
-        let html = `<h3>Today's Schedule</h3>`;
-        
-        if (schedule.length === 0) {
-          html += `<p style="color: #95a5a6;">No medicines scheduled for today.</p>`;
-        } else {
-          schedule.forEach(med => {
-            const status = med.taken 
-              ? `<span class="taken-text">Taken ✓</span>` 
-              : `<span class="pending-text">Pending</span>`;
-            html += `<div class="schedule-item"><span><b>${med.time}</b> - ${med.name}</span> ${status}</div>`;
-          });
-        }
-        
-        html += `<button onclick="window.resetDay()" class="btn-reset" aria-label="Reset schedule for new day">Reset Schedule for New Day</button>`;
-        
-        listDiv.innerHTML = html;
-      } catch (e) {
-        showError('Failed to render schedule: ' + e.message);
-      }
-    }
-
-    window.resetDay = function() {
-      try {
-        schedule = defaultSchedule.map(med => ({...med, taken: false, alerted: false}));
-        saveSchedule();
-        showSuccess('Schedule reset for new day!');
-      } catch (e) {
-        showError('Failed to reset schedule: ' + e.message);
-      }
-    }
-
-    // --- 4. CLOCK & ALERT LOGIC ---
-    function updateClock() {
-      try {
-        const now = new Date();
-        const timeString = formatTime(now);
-        
-        if (!timeString) {
-          console.error('Failed to format time');
-          return;
-        }
-
-        const clockElement = document.getElementById('clock');
-        if (clockElement) {
-          clockElement.innerText = timeString;
-        }
-        
-        checkMedicines(timeString);
-      } catch (e) {
-        console.error('Clock update error:', e);
-      }
-    }
-
-    function checkMedicines(currentTime) {
-      if (!currentTime || typeof currentTime !== 'string') return;
-
-      const container = document.getElementById('medicine-container');
-      if (!container) return;
-
-      try {
-        schedule.forEach(med => {
-          if (med.time === currentTime && !med.taken && !med.alerted) {
-            triggerMedicineAlert(med, container);
-          }
-        });
-      } catch (e) {
-        console.error('Medicine check error:', e);
-      }
-    }
-
-    function triggerMedicineAlert(med, container) {
-      try {
-        med.alerted = true;
-        saveSchedule();
-        
-        // 1. Show massive UI Alert
-        container.innerHTML = `
-          <div class="med-card">
-            <div class="med-name">TAKE NOW:<br>${med.name}</div>
-            <div class="med-time">Scheduled at: ${med.time}</div>
-            <button class="btn" onclick="window.markTaken(${med.id})" aria-label="Mark medicine as taken">I TOOK IT</button>
-          </div>
-        `;
-
-        // 2. Play Audio & Push Notification
-        if ("Notification" in window && Notification.permission === "granted") {
-          try {
-            new Notification("Medicine Time!", { 
-              body: `It's time to take your ${med.name}`, 
-              icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%233498db'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='central'>💊</text></svg>",
-              requireInteraction: true,
-              tag: 'medicine-alert-' + med.id
-            });
-          } catch (e) {
-            console.warn('Notification failed:', e);
-          }
-        }
-        
-        playBeep();
-        alertSoundInterval = setInterval(playBeep, CONFIG.ALERT_SOUND_INTERVAL);
-
-        // 3. Start Caregiver Alert Countdown
-        setTimeout(() => {
-          try {
-            const currentData = JSON.parse(localStorage.getItem('caresync_data')) || schedule;
-            const checkMed = currentData.find(m => m.id === med.id);
-            if (checkMed && !checkMed.taken) {
-              triggerCaregiverAlert(med.name);
-            }
-          } catch (e) {
-            console.error('Caregiver alert check failed:', e);
-          }
-        }, CONFIG.CAREGIVER_TIMEOUT);
-
-      } catch (e) {
-        showError('Failed to trigger medicine alert: ' + e.message);
-      }
-    }
-
-    // --- 5. ACTIONS ---
-    window.markTaken = function(id) {
-      try {
-        if (alertSoundInterval) {
-          clearInterval(alertSoundInterval);
-        }
-        
-        const med = schedule.find(m => m.id === id);
-        if (med) {
-          med.taken = true;
-          saveSchedule();
-          
-          const container = document.getElementById('medicine-container');
-          if (container) {
-            container.innerHTML = `
-              <h2 style="color: #27ae60; font-size: 2.5rem; margin-top: 40px;" class="pop-in" aria-live="polite">
-                Great job! ✓
-              </h2>
-            `;
-            
-            // Return to normal schedule view after 3 seconds
-            setTimeout(() => {
-              container.innerHTML = `<div class="schedule-list" id="schedule-list"></div>`;
-              renderScheduleList();
-            }, 3000);
-          }
-        }
-      } catch (e) {
-        showError('Failed to mark medicine as taken: ' + e.message);
-      }
-    }
-
-    function triggerCaregiverAlert(medName) {
-      try {
-        console.log(`🚨 CAREGIVER ALERT: Missed ${medName}`);
-        
-        if (!CONFIG.WEBHOOK_URL) {
-          console.warn('Webhook URL not configured. Set it in settings.');
-          return;
-        }
-        
-        fetch(CONFIG.WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message: `URGENT: Patient missed their ${medName} dose.`,
-            timestamp: new Date().toISOString()
-          })
-        }).catch(err => {
-          console.warn("Webhook delivery failed:", err.message);
-        });
-      } catch (e) {
-        console.error('Caregiver alert error:', e);
-      }
-    }
-
-    // --- INITIALIZATION ---
+  // Play beep sound
+  function playBeep() {
     try {
-      loadSchedule();
-      renderScheduleList();
-      setInterval(updateClock, CONFIG.CHECK_INTERVAL);
-      updateClock();
-      console.log('CareSync initialized successfully');
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.type = 'sine';
+
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
     } catch (e) {
-      showError('Failed to initialize app: ' + e.message);
-      console.error('Initialization error:', e);
+      console.warn('Audio playback failed:', e);
     }
-  </script>
+  }
+
+  // Trigger caregiver alert
+  function triggerCaregiverAlert(medicine) {
+    setTimeout(() => {
+      const med = medicines.find(m => m.id === medicine.id);
+      if (med && !med.taken) {
+        const webhookUrl = localStorage.getItem('webhook_url');
+        if (webhookUrl) {
+          fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: `⚠️ ALERT: Patient has NOT taken ${medicine.name} (scheduled at ${medicine.time})`,
+              timestamp: new Date().toISOString()
+            })
+          }).catch(e => console.warn('Webhook failed:', e));
+        }
+      }
+    }, CONFIG.CAREGIVER_TIMEOUT);
+  }
+
+  // Request notification permission
+  function requestNotificationPermission() {
+    if ("Notification" in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          document.getElementById('notificationBanner').classList.add('hidden');
+          showAlert('Notifications enabled! ✨', 'success');
+        }
+      });
+    }
+  }
+
+  // Show alert message
+  function showAlert(message, type = 'info') {
+    const container = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️'
+    };
+
+    alert.innerHTML = `<span>${icons[type]}</span> <span>${message}</span>`;
+    container.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 5000);
+  }
+
+  // Reset schedule
+  function resetSchedule() {
+    if (confirm('Are you sure you want to reset all medicines for today?')) {
+      medicines.forEach(med => {
+        med.taken = false;
+        med.alerted = false;
+      });
+      saveMedicines();
+      showAlert('Schedule reset! ✨', 'success');
+    }
+  }
+
+  // Settings
+  function openSettings() {
+    document.getElementById('settingsModal').classList.add('active');
+    document.getElementById('webhookUrl').value = localStorage.getItem('webhook_url') || '';
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('active');
+  }
+
+  function saveSettings() {
+    const webhookUrl = document.getElementById('webhookUrl').value.trim();
+    if (webhookUrl) {
+      localStorage.setItem('webhook_url', webhookUrl);
+    } else {
+      localStorage.removeItem('webhook_url');
+    }
+    showAlert('Settings saved! ✨', 'success');
+    closeSettings();
+  }
+
+  function exportData() {
+    const data = {
+      medicines,
+      exportDate: new Date().toISOString()
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `caresync-backup-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showAlert('Data exported! 📥', 'success');
+  }
+
+  function clearAllData() {
+    if (confirm('Are you sure? This will delete ALL medicines and cannot be undone!')) {
+      localStorage.clear();
+      medicines = [];
+      renderSchedule();
+      showAlert('All data cleared', 'success');
+      closeSettings();
+    }
+  }
+
+  // Close modal on outside click
+  window.onclick = function(event) {
+    const modal = document.getElementById('settingsModal');
+    if (event.target === modal) {
+      closeSettings();
+    }
+  };
+
+  // Initialize on load
+  window.addEventListener('load', init);
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW error:', e));
+  }
+</script>
+
 </body>
 </html>
