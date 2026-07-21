@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CareSync Reminder</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#3498db">
+  
+  <style>
+    /* High-contrast, highly readable UI */
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: #f4f4f9; 
+      color: #111; 
+      text-align: center; 
+      padding: 15px; 
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .header h1 { font-size: 2.2rem; color: #2c3e50; margin: 20px 0 5px 0; }
+    .clock { font-size: 5rem; font-weight: bold; margin: 10px 0 30px 0; color: #e74c3c; font-variant-numeric: tabular-nums; }
+    
+    .schedule-list { text-align: left; background: #fff; padding: 20px; border-radius: 12px; margin: 0 auto; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .schedule-list h3 { margin-top: 0; color: #7f8c8d; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .schedule-item { font-size: 1.2rem; padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;}
+    .taken-text { color: #27ae60; font-weight: bold; }
+    .pending-text { color: #e67e22; }
+
+    /* The Active Alert Card */
+    .med-card { 
+      background: white; 
+      padding: 35px 20px; 
+      border-radius: 16px; 
+      margin: 20px auto; 
+      max-width: 400px; 
+      box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4); 
+      border: 4px solid #e74c3c; 
+      animation: pulseAlert 2s infinite;
+    }
+    
+    .med-name { font-size: 2.5rem; font-weight: 900; color: #c0392b; line-height: 1.2; }
+    .med-time { font-size: 1.5rem; color: #555; margin: 15px 0; }
+    
+    .btn { 
+      background: #27ae60; color: white; border: none; padding: 25px; font-size: 2rem; 
+      border-radius: 12px; cursor: pointer; width: 100%; margin-top: 20px; font-weight: bold; 
+      box-shadow: 0 6px 0 #1e8449; transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn:active { transform: translateY(6px); box-shadow: 0 0 0 #1e8449; }
+    
+    .btn-test { background: #34495e; font-size: 1.1rem; padding: 15px; margin: 20px auto; box-shadow: 0 4px 0 #2c3e50; max-width: 300px;}
+    .hidden { display: none !important; }
+
+    /* Footer Credits */
+    .footer { margin-top: auto; padding: 20px 0; font-size: 0.9rem; color: #95a5a6; font-weight: bold; }
+
+    @keyframes pulseAlert {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 20px rgba(231, 76, 60, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Current Time</h1>
+    <div class="clock" id="clock">00:00</div>
+  </div>
+
+  <button id="notify-btn" class="btn btn-test" onclick="requestPermissions()">Enable Device Alerts</button>
+
+  <div id="medicine-container">
+    <!-- Active alerts replace this content -->
+    <div class="schedule-list" id="schedule-list">
+      <h3>Today's Schedule</h3>
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <div class="footer">
+    Designed & Developed by Vedant Sharma
+  </div>
+
+  <script>
+    // --- 1. SERVICE WORKER & NOTIFICATIONS ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Error:', err));
+      });
+    }
+
+    // Hide notify button if already granted
+    if ("Notification" in window && Notification.permission === "granted") {
+      document.getElementById('notify-btn').classList.add('hidden');
+    }
+
+    function requestPermissions() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            document.getElementById('notify-btn').classList.add('hidden');
+            alert("Alerts enabled successfully!");
+          }
+        });
+      }
+    }
+
+    // --- 2. AUDIO ALARM SYNTHESIZER ---
+    function playBeep() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        osc.type = 'square'; // Harsh, noticeable sound
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        
+        // Pulse the volume
+        gainNode.gain.setValueAtTime(1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } catch (e) {
+        console.log("Audio not supported or blocked by browser policy.");
+      }
+    }
+
+    // --- 3. DATA & LOCAL STORAGE ---
+    // Change these times to 1 minute from now to test it locally!
+    const defaultSchedule = [
+      { id: 1, name: "Heart Pill (Lisinopril)", time: "09:00", taken: false, alerted: false },
+      { id: 2, name: "Memory Med (Donepezil)", time: "20:00", taken: false, alerted: false }
+    ];
+
+    // Load from memory, or use defaults if first time
+    let schedule = JSON.parse(localStorage.getItem('caresync_data')) || defaultSchedule;
+
+    function saveSchedule() {
+      localStorage.setItem('caresync_data', JSON.stringify(schedule));
+      renderScheduleList();
+    }
+
+    function renderScheduleList() {
+      const listDiv = document.getElementById('schedule-list');
+      if (!listDiv) return; // Don't render if an alert is currently showing
+      
+      let html = `<h3>Today's Schedule</h3>`;
+      schedule.forEach(med => {
+        const status = med.taken ? `<span class="taken-text">Taken ✓</span>` : `<span class="pending-text">Pending</span>`;
+        html += `<div class="schedule-item"><span><b>${med.time}</b> - ${med.name}</span> ${status}</div>`;
+      });
+      
+      // Optional: Reset button for caregivers to reset the day
+      html += `<button onclick="resetDay()" style="margin-top:20px; width:100%; padding:10px; border:1px solid #ccc; background:#fff; cursor:pointer;">Reset Schedule for New Day</button>`;
+      
+      listDiv.innerHTML = html;
+    }
+
+    window.resetDay = function() {
+      schedule = defaultSchedule.map(med => ({...med, taken: false, alerted: false}));
+      saveSchedule();
+    }
+
+    // --- 4. CLOCK & ALERT LOGIC ---
+    let alertSoundInterval = null;
+
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      document.getElementById('clock').innerText = timeString;
+      checkMedicines(timeString);
+    }
+
+    function checkMedicines(currentTime) {
+      const container = document.getElementById('medicine-container');
+      
+      schedule.forEach(med => {
+        if (med.time === currentTime && !med.taken && !med.alerted) {
+          med.alerted = true; 
+          saveSchedule();
+          
+          // 1. Show massive UI Alert (replaces the schedule list)
+          container.innerHTML = `
+            <div class="med-card">
+              <div class="med-name">TAKE NOW:<br>${med.name}</div>
+              <div class="med-time">Scheduled at: ${med.time}</div>
+              <button class="btn" onclick="markTaken(${med.id})">I TOOK IT</button>
+            </div>
+          `;
+
+          // 2. Play Audio & Push Notification
+          if (Notification.permission === "granted") {
+            new Notification("Medicine Time!", { body: `It's time to take your ${med.name}`, icon: "icon-192.png", requireInteraction: true });
+          }
+          
+          playBeep(); // Initial beep
+          alertSoundInterval = setInterval(playBeep, 5000); // Beep every 5 seconds until dismissed
+
+          // 3. Start Caregiver Alert Countdown (30 minutes = 1800000 ms)
+          setTimeout(() => {
+            // Check fresh from local storage in case they updated it
+            const currentData = JSON.parse(localStorage.getItem('caresync_data'));
+            const checkMed = currentData.find(m => m.id === med.id);
+            if (!checkMed.taken) {
+              triggerCaregiverAlert(med.name);
+            }
+          }, 1800000); 
+        }
+      });
+    }
+
+    // --- 5. ACTIONS ---
+    window.markTaken = function(id) {
+      clearInterval(alertSoundInterval); // Stop the beeping
+      
+      const med = schedule.find(m => m.id === id);
+      if (med) {
+        med.taken = true;
+        saveSchedule();
+        
+        document.getElementById('medicine-container').innerHTML = `
+          <h2 style="color: #27ae60; font-size: 2.5rem; margin-top: 40px; animation: popIn 0.5s;">
+            Great job! ✓
+          </h2>
+        `;
+        
+        // Return to normal schedule view after 3 seconds
+        setTimeout(() => {
+          document.getElementById('medicine-container').innerHTML = `<div class="schedule-list" id="schedule-list"></div>`;
+          renderScheduleList();
+        }, 3000);
+      }
+    }
+
+    function triggerCaregiverAlert(medName) {
+      console.log(`🚨 CAREGIVER ALERT: Missed ${medName}`);
+      const webhookURL = "YOUR_WEBHOOK_URL_HERE"; 
+      
+      fetch(webhookURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `URGENT: Patient missed their ${medName} dose.` })
+      }).catch(err => console.log("Webhook skipped (URL not set)"));
+    }
+
+    // Init
+    renderScheduleList();
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
